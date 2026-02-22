@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legenda Dochiei - Drumul pe Munte</title>
+    <style>
+      :root {
+          --romanian-red: #d32f2f;
+          --art-red: #d62828;
+          --art-dark: #2b2d42;
+}
+
+body, html {
+    margin: 0; padding: 0; height: 100%;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    
+    background-color: #000; /* Fundal de siguranță */
+    overflow-x: hidden;   /* ca să nu apară scroll orizontal */
+    overflow-y: auto;     /* scroll vertical normal */
+}
+
+/* LANDSCAPE - Muntele care urcă */
+/*#mountain-path {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 300vh;*/ /* Foarte înalt pentru a avea ce să "derulăm" 
+    background: url('landscape.png') no-repeat center bottom;
+    background: url('landscape.png') no-repeat center calc(100% + 200px);
+    background-size: cover;
+    z-index: 1;
+     Mișcare lină de 3 secunde când se schimbă locația 
+    transition: transform 3s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: brightness(0.7);
+}
+#mountain-path {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 120vh; 
+    background: url('landscape.png') no-repeat center bottom;
+    background-size: cover;
+    z-index: 1;
+    transition: transform 3s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: brightness(0.7);
+    background-position: center bottom;
+
+}*/
+#mountain-path {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: url('landscape.png') no-repeat center bottom;
+    background-size: cover; /*auto 140%;  imagine mai înaltă */
+    z-index: 1;
+    filter: brightness(0.7);
+
+    /* Adăugăm animația */
+    /*animation: climbMountain 8s ease-in-out forwards;*/
+}
+
+/*@keyframes climbMountain {
+    0% {
+        background-position: center 100%; --Jos, la iarbă 
+    }
+    100% {
+        background-position: center 0%;   ---Sus, la vârf și cer 
+    }
+}*/
+
+
+/* OVERLAY - Stratul de deasupra muntelui */
+#game-overlay {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    width: 100%;
+    
+    min-height: 100vh;
+    height: auto;
+}
+
+/* CONTAINER TRANSPARENT (Glassmorphism) */
+.container {
+    background: rgba(255, 255, 255, 0.1); 
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 40px;
+    border-radius: 30px;
+    color: white;
+    max-width: 450px;
+    width: 85%;
+    text-align: center;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.martisor-container { position: relative; width: 200px; height: 200px; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; }
+        
+#martisor-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    position: relative;
+    border-radius:50%;
+    z-index: 1; /* Imaginea este sub cerc */
+}
+
+#martisor-desc {
+    color: #fff;
+}
+
+/* Șnurul de mărțișor (Elementul constant) */
+.snur-frame {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 6px solid transparent;
+    border-top-color: var(--art-red);
+    border-bottom-color: #eee;
+    border-radius: 50%;/*cerc*/
+    animation: rotatia 20s linear infinite;
+    z-index: 5; /* Cercul este deasupra imaginii */
+}
+
+.snur-frame::after { content: '∞'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: var(--art-red); font-size: 20px; }
+.watermark { font-size: 11px; color: #ccc; margin-top: 25px; letter-spacing: 2px; text-transform: uppercase; }
+.save-btn { background: var(--art-red); color: white; border: none; padding: 16px; width: 100%; cursor: pointer;
+           font-weight: bold; margin-top: 20px; letter-spacing: 1px; }
+
+@keyframes rotatia { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+
+/* IMAGINILE COJOACELOR (cojoc1.png...9.png) */
+#cojoc-display {
+    width: 250px;
+    height: 250px;
+    margin: 0 auto 20px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* Face fundalul NEGRU al pozelor tale să devină transparent */
+    mix-blend-mode: screen; 
+    transition: all 0.5s ease;
+}
+
+/* BUTOANELE DE RĂSPUNS */
+button {
+    display: block;
+    width: 100%;
+    margin: 12px 0;
+    padding: 15px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(211, 47, 47, 0.85); /* Roșu tradițional transparent */
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: var(--romanian-red);
+    transform: scale(1.02);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* BARA DE PROGRES */
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+    margin-bottom: 25px;
+}
+
+#progress-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--romanian-red);
+    box-shadow: 0 0 10px var(--romanian-red);
+    transition: width 0.6s ease;
+}
+
+.hidden { display: none; }
+
+/* Meniu Limbi */
+.lang-picker { position: absolute;
+              top: 15px;
+              right: 15px;
+              display: flex; 
+              gap: 8px; 
+              z-index: 100;}
+.lang-btn { background: none; border: 1px solid #eee; font-size: 0.7rem; cursor: pointer; padding: 4px 8px; transition: 0.3s; }
+.lang-btn.active { border-color: var(--art-red); color: var(--art-red); font-weight: bold; }
+
+.header-brand {
+    color: white !important;
+}
+a.header-brand {
+    color: white;
+}
+.header-brand:link,
+.header-brand:visited,
+.header-brand:hover {
+    color: white !important;
+}
+#capture-area { padding: 40px 20px;
+               border: 1px solid #f9f9f9; 
+               border-radius: 8px;
+              align-items: center;}
+/*#capture-area {
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}*/
+
+
+    </style>
+</head>
+<body>
+<div class="lang-picker">
+    <button class="lang-btn active" onclick="setLanguage('ro')" data-key="lang_ro">RO</button>
+    <button class="lang-btn" onclick="setLanguage('en')" data-key="lang_en">EN</button>
+</div>
+<div id="mountain-path"></div>
+
+<div id="game-overlay">
+    <div class="container" id="quiz-container">
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        
+        <div id="cojoc-display" style="background-image: url('cojoc1.png');"></div>
+        
+        <h2 id="story-title" data-key="intro_title">Legenda Dochiei</h2>
+
+        <p id="question-text" style="font-size: 18px; line-height: 1.5;" data-key="intro_text">Baba Dochia pornește urcușul...</p>
+
+        
+        <div id="options">
+            <button onclick="nextStep()" data-key="start_btn">Începe călătoria</button>
+        </div>
+        
+        <button id="back-btn" style="display:none" onclick="previousStep()" data-key="bback_btn">Înapoi</button>
+
+    </div>
+
+    <div class="container hidden"  id="result-container">
+          <h2 data-key="summit_title">Vârful a fost atins!</h2>
+          <p id="martisor-desc" style="font-size: 18px; font-weight: 500; color: #fff;"></p>
+        <div id="capture-area">
+             <div class="martisor-container">
+                <div class="snur-frame"></div>
+                     <img id="martisor-img" src="cojoc_traditional.png" alt="Cojoc Tradițional" style="width: 250px; margin: 20px 0;">  
+            </div>
+          
+            <p style="font-style: italic; color: #E5E4E2;" data-key="spring_won">Primăvara a învins iarna.</p>
+            <div class="watermark">artmera.wordpress.com</div>
+        </div>
+         <button class="save-btn" onclick="saveImg()" data-key="save_btn">SALVEAZĂ MĂRȚIȘORUL</button>
+         <button onclick="location.reload()" data-key="restart">Reia Legenda</button>
+        <br>
+        <a href="https://artmera.wordpress.com" target="_blank" class="header-brand" 
+            style="text-decoration: none; display: block; margin-top: 20px;" data-key="visit">Revenire la Artmera</a>
+
+    </div>
+
+   </div>
+
+<script>
+    //Creezi un array numit questions.
+    //Fiecare element este un obiect cu două proprietăți:
+    //q = textul întrebării
+    //a = un array cu cele 3 variante de răspuns
+    const questions = {
+    ro: [
+        { q: "Ce stare porți pe umeri astăzi?", a: ["Viforul jucăuș", "Liniștea de după ploaie", "Prima rază de soare"] },
+        { q: "Ce se ascunde în buzunarele tale?", a: ["Semințe de viitor", "Cioburi de gheață", "O rază de rezervă"] },
+        { q: "Ce vrei să aducă vântul de miazăzi?", a: ["Aromă de pământ reavăn", "O veste bună", "Un suflu de libertate"] },
+        { q: "Cum întâmpini ninsoarea de primăvară?", a: ["Cu un dans", "Cu un zâmbet complice", "Cu nerăbdare"] },
+        { q: "Ce sclipire alegi să oglindești?", a: ["Cristalele de ger", "Lumina crudă", "Aurul soarelui blând"] },
+        { q: "Ce forță nouă simți sub cojoc?", a: ["Puterea de a te reinventa", "Forța de a sparge gheața", "Curajul de a înflori"] },
+        { q: "Ce lași să treacă precum norii?", a: ["Gândul greu", "Monotonia", "Ezitarea"] },
+        { q: "Ce păstrezi viu, indiferent de vreme?", a: ["Focul lăuntric", "Curiozitatea", "Speranța verde"] },
+        { q: "Ce devii când se topește zăpada?", a: ["Culoare pură", "Lumină", "O nouă poveste"] }
+    ],
+
+    en: [
+        { q: "What feeling rests on your shoulders today?", a: ["A playful blizzard", "The calm after rain", "The first ray of sun"] },
+        { q: "What hides in your pockets?", a: ["Seeds of the future", "Shards of ice", "A spare ray of light"] },
+        { q: "What do you wish the southern wind to bring?", a: ["The scent of fresh earth", "A piece of good news", "A breath of freedom"] },
+        { q: "How do you greet the spring snowfall?", a: ["With a dance", "With a knowing smile", "With anticipation"] },
+        { q: "Which sparkle do you choose to reflect?", a: ["Frost crystals", "Raw light", "The gentle gold of the sun"] },
+        { q: "What new strength do you feel beneath your coat?", a: ["The power to reinvent yourself", "The force to break the ice", "The courage to bloom"] },
+        { q: "What do you let pass like drifting clouds?", a: ["The heavy thought", "Monotony", "Hesitation"] },
+        { q: "What do you keep alive, no matter the weather?", a: ["The inner fire", "Curiosity", "The green hope"] },
+        { q: "What do you become when the snow melts?", a: ["Pure color", "Light", "A new story"] }
+    ]
+};
+
+    const i18n = {
+    ro: {
+        // Meniu limbi
+        lang_ro: "RO",
+        lang_en: "EN",
+
+        // Intro
+        intro_title: "Legenda Dochiei",
+        intro_text: "Baba Dochia pornește urcușul. Ești gata să o ajuți să lepede cojoacele?",
+        start_btn: "Începe călătoria",
+        bback_btn: "Înapoi",
+
+        // Rezultat
+        summit_title: "Vârful a fost atins!",
+        spring_won: "Primăvara a învins iarna.",
+        restart: "Reia Legenda",
+
+        // Salvare
+        save_btn: "SALVEAZĂ MĂRȚIȘORUL",
+        visit: "Revenire la Artmera",
+        
+        final_text: "Ai lepădat toate cele 9 cojoace pe munte. Dochia s-a transformat în stană de piatră, dar spiritul primăverii a rămas cu tine printr-un ",
+        tip_A: "Mărțișor Puritate",
+        tip_B: "Mărțișor Energie și Viață",
+        tip_C: "Mărțișor Echilibru"
+        },
+
+    en: {
+        // Language menu
+        lang_ro: "RO",
+        lang_en: "EN",
+
+        // Intro
+        intro_title: "The Legend of Dochia",
+        intro_text: "Old Dochia begins her climb. Are you ready to help her shed the coats?",
+        start_btn: "Begin the journey",
+        bback_btn: "Back",
+
+        // Result
+        summit_title: "The peak has been reached!",
+        spring_won: "Spring has defeated winter.",
+        restart: "Restart the Legend",
+
+        // Save
+        save_btn: "SAVE THE MĂRȚIȘOR",
+        visit: "Return to Artmera",
+        final_text: "You have shed all 9 coats on the mountain. Dochia turned into stone, but the spirit of spring stayed with you through ",
+        tip_A: "a Purity Mărțișor",
+        tip_B: "an Energy & Life Mărțișor",
+        tip_C: "a Balance Mărțișor"
+    }
+};
+
+    let currentLang = 'ro';
+    //currentStep reține numărul întrebării curente (începe de la 0).
+    //scores ține scorul pentru cele trei tipuri de răspunsuri:
+    //A = primul răspuns
+    //B = al doilea
+    //C = al treilea
+    let currentStep = 0;
+    let scores = { A: 0, B: 0, C: 0 };
+    let martisorTip = "";
+    let answersHistory = [];
+
+   function previousStep() {//inapoi
+        if (currentStep === 0) return; // nu poți merge mai înapoi
+    
+        currentStep--; // mergi la întrebarea anterioară
+    
+        // scoatem scorul răspunsului anterior
+        const lastChoice = answersHistory[currentStep];
+    
+        if (lastChoice === 0) scores.A--;
+        else if (lastChoice === 1) scores.B--;
+        else scores.C--;
+    
+        updateUI();
+    }
+
+    
+    //Funcția este apelată când utilizatorul apasă un buton de răspuns.
+    function nextStep(choiceIndex) {
+        // Înregistrăm scorul dacă nu este prima apăsare (start)
+        if (choiceIndex !== undefined) {
+             answersHistory[currentStep] = choiceIndex;//salvare intrebare pentru pas inapoi
+            if(choiceIndex === 0) scores.A++;
+            else if(choiceIndex === 1) scores.B++;
+            else scores.C++;
+            currentStep++;//Treci la următoarea întrebare (currentStep++).
+        }
+        
+        //Dacă mai sunt întrebări → actualizezi interfața.
+        //Dacă ai ajuns la final → afișezi rezultatul.
+
+        if (currentStep < questions[currentLang].length) {
+            updateUI();
+        } else {
+            showFinalResult();
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('back-btn').style.display =    currentStep === 0 ? 'none' : 'block';//ascundere buton inapoi
+
+        // Actualizăm imaginea cojocului: cojoc1.png, cojoc2.png...
+        
+        const cojocImg = `cojoc${currentStep + 1}.png`;
+        const display = document.getElementById('cojoc-display');
+        display.style.transform = 'scale(0.8)';//Micșorezi imaginea pentru efect vizual.
+
+        //După 200 ms:
+        //Schimbi imaginea.
+        //O readuci la dimensiunea normală → efect de zoom.
+        setTimeout(() => {
+            display.style.backgroundImage = `url('${cojocImg}')`;
+            display.style.transform = 'scale(1)';
+        }, 200);
+
+        // Actualizăm textul și progresul
+        //Calculezi procentul în funcție de întrebarea curentă.
+        //Setezi lățimea barei.
+        document.getElementById('progress-fill').style.width = ((currentStep + 1) / 9 * 100) + '%';
+
+        //Schimbi întrebarea afișată.
+        //Schimbi titlul poveștii (Cojocul 1, Cojocul 2…).
+        document.getElementById('question-text').innerText = questions[currentLang][currentStep].q;
+        
+        // Zoom pe fundal
+        //Mărești treptat fundalul pentru efect cinematic.
+        //document.getElementById('mountain-path').style.transform = `scale(${1 + currentStep * 0.05})`;
+        //document.getElementById('mountain-path').style.transform =`translateY(${currentStep * 20}px)`;
+        // Presupunând că currentStep crește pe măsură ce utilizatorul înaintează
+        const mountain = document.getElementById('mountain-path');
+        const moveAmount = currentStep * 45; // Ajustează valoarea (10) pentru viteză 
+        // Pornim de la 100% (iarba) și scădem valoarea pentru a urca spre 0% (cer)
+        mountain.style.backgroundPosition = `center calc(100% + ${moveAmount}px)`;
+
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        //Pentru fiecare răspuns:
+        //Creezi un buton.
+        //Îi setezi textul.
+        //Îi setezi acțiunea la click → trece la următoarea întrebare.
+        //Îl adaugi în pagină.
+        questions[currentLang][currentStep].a.forEach((choice, i) => {
+            const btn = document.createElement('button');
+            btn.innerText = choice;
+            btn.onclick = () => nextStep(i);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function showFinalResult() {
+        //Ascunzi quiz-ul și arăți rezultatul
+        document.getElementById('quiz-container').classList.add('hidden');
+        document.getElementById('result-container').classList.remove('hidden');
+
+        //Compari scorurile. Alegi mărțișorul dominant.
+        //let martisorTip = "";
+
+        /*if (scores.A >= scores.B && scores.A >= scores.C) martisorTip = i18n[currentLang].tip_A;
+        else if (scores.B >= scores.A && scores.B >= scores.C) martisorTip = i18n[currentLang].tip_B;
+        else martisorTip = i18n[currentLang].tip_C;   */
+        if (scores.A >= scores.B && scores.A >= scores.C) martisorTip = "A";
+        else if (scores.B >= scores.A && scores.B >= scores.C) martisorTip = "B";
+        else martisorTip = "C";
+        const img = document.getElementById('martisor-img');
+
+        if (scores.A >= scores.B && scores.A >= scores.C) {
+            img.src = "martisor_a.png";        // imagine pentru Mărțișor Alb
+            img.alt = "Mărțișor Alb";
+        }
+        else if (scores.B >= scores.A && scores.B >= scores.C) {
+            img.src = "martisor_b.png";       // imagine pentru Mărțișor Roșu
+            img.alt = "Mărțișor Roșu";
+        }
+        else {
+            img.src = "martisor_c.png";   // imagine pentru Mărțișor Împletit
+            img.alt = "Mărțișor Împletit";
+        }
+
+        //document.getElementById('martisor-desc').innerText =    i18n[currentLang].final_text + martisorTip + ".";
+        document.getElementById('martisor-desc').innerText =    i18n[currentLang].final_text + i18n[currentLang]["tip_" + martisorTip] + ".";
+    }
+
+    function saveImg() {
+        const area = document.getElementById('capture-area');
+        html2canvas(area).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'martisor-artmera.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+    function setLanguage(lang) {
+        currentLang = lang;
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        document.querySelectorAll('[data-key]').forEach(el => {
+            const key = el.getAttribute('data-key');
+            if (i18n[lang][key]) el.innerText = i18n[lang][key];
+        });
+
+        
+        if (martisorTip) {
+            document.getElementById('martisor-desc').innerText =
+                i18n[currentLang].final_text + i18n[currentLang]["tip_" + martisorTip] + ".";
+        }
+
+        if (currentStep < questions[currentLang].length) {
+            updateUI();
+        }
+    }
+</script>
+</body>
+</html>
