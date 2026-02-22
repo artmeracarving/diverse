@@ -511,29 +511,30 @@ a.header-brand {
         });
     }
     function setLanguage(lang, btn) {
-        currentLang = lang;
-    
-        // active button
-        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    
-        // update static text
-        document.querySelectorAll('[data-key]').forEach(el => {
-            const key = el.getAttribute('data-key');
-            if (i18n[lang][key]) el.innerText = i18n[lang][key];
-        });
-    
-        // update final result if already shown
-        if (martisorTip) {
-            document.getElementById('martisor-desc').innerText =
-                i18n[currentLang].final_text + i18n[currentLang]["tip_" + martisorTip] + ".";
+            currentLang = lang;
+        
+            // active button
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        
+            // update static text
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (i18n[lang][key]) el.innerText = i18n[lang][key];
+            });
+        
+            // update final result if already shown
+            if (martisorTip) {
+                document.getElementById('martisor-desc').innerText =
+                    i18n[currentLang].final_text + i18n[currentLang]["tip_" + martisorTip] + ".";
+            }
+        
+            // update quiz UI if still running
+            if (currentStep < questions[currentLang].length) {
+                updateUI();
+            }
         }
-    
-        // update quiz UI if still running
-        if (currentStep < questions[currentLang].length) {
-            updateUI();
-        }
-    }
+
 </script>
 </body>
 </html>
