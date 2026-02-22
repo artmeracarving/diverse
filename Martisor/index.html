@@ -529,11 +529,10 @@ a.header-brand {
                     i18n[currentLang].final_text + i18n[currentLang]["tip_" + martisorTip] + ".";
             }
         
-            // update quiz UI if still running
-            if (currentStep < questions[currentLang].length) {
-                updateUI();
-            }
+            // update quiz UI AFTER language is fully applied
+            updateUI();
         }
+
 
 </script>
 </body>
